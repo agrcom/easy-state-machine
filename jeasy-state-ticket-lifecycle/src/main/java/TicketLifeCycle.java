@@ -1,6 +1,9 @@
 import actions.CreateEH;
+import actions.StartDevelopmentEH;
 import com.google.common.collect.ImmutableSet;
-import events.OpenEvent;
+import events.CreateEvent;
+import events.StartDevelopmentEvent;
+import events.StopDevelopmentEvent;
 import org.jeasy.states.api.FiniteStateMachine;
 import org.jeasy.states.api.State;
 import org.jeasy.states.api.Transition;
@@ -12,34 +15,44 @@ import java.util.Set;
 public class TicketLifeCycle {
 
 
-    State none = new State("None");
+    State initial = new State("Initial");
     State open = new State("Open");
     State inDevelopment = new State("InDevelopment");
     State testing = new State("Testing");
     State close = new State("Close");
 
-    Set<State> states = ImmutableSet.of(none, open, inDevelopment, testing, close);
+    Set<State> states = ImmutableSet.of(initial, open, inDevelopment, testing, close);
 
     Transition openTransition = new TransitionBuilder()
             .name("open")
-            .sourceState(none)
-            .eventType(OpenEvent.class)
+            .sourceState(initial)
+            .eventType(CreateEvent.class)
             .eventHandler(new CreateEH())
+            .targetState(open)
+            .build();
+
+    Transition inDevTransition = new TransitionBuilder()
+            .name("inDevelopment")
+            .sourceState(open)
+            .eventType(StartDevelopmentEvent.class)
+            .eventHandler(new StartDevelopmentEH())
             .targetState(inDevelopment)
             .build();
 
-            /*                .name("unlock")
-                .sourceState(locked)
-                .eventType(CoinEvent.class)
-                .eventHandler(new Unlock())
-                .targetState(unlocked)
-                .build();*/
-
-    FiniteStateMachine turnstileStateMachine = new FiniteStateMachineBuilder(states, none)
-            .registerTransition(openTransition)
-
-            .registerFinalState(close)
+    Transition inTestTransition = new TransitionBuilder()
+            .name("inTesting")
+            .sourceState(inDevelopment)
+            .eventType(StopDevelopmentEvent.class)
+            .eventHandler(new StartDevelopmentEH())
+            .targetState(inDevelopment)
             .build();
 
+    public FiniteStateMachine configure() {
+        return new FiniteStateMachineBuilder(states, initial)
+                .registerTransition(openTransition)
+                .registerTransition(inDevTransition)
 
+                .registerFinalState(close)
+                .build();
+    }
 }
