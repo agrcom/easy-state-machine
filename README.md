@@ -1,2 +1,4 @@
 # easy-state-machine
-State machine with easy-state
+I would like to prepare few easy implementations for state machine problem.
+
+
