@@ -1,9 +1,9 @@
+import actions.CloseTicketEH;
 import actions.CreateEH;
+import actions.ReOpenEH;
 import actions.StartDevelopmentEH;
 import com.google.common.collect.ImmutableSet;
-import events.CreateEvent;
-import events.StartDevelopmentEvent;
-import events.StopDevelopmentEvent;
+import events.*;
 import org.jeasy.states.api.FiniteStateMachine;
 import org.jeasy.states.api.State;
 import org.jeasy.states.api.Transition;
@@ -44,14 +44,33 @@ public class TicketLifeCycle {
             .sourceState(inDevelopment)
             .eventType(StopDevelopmentEvent.class)
             .eventHandler(new StartDevelopmentEH())
-            .targetState(inDevelopment)
+            .targetState(testing)
+            .build();
+
+    Transition testToCloseTransition = new TransitionBuilder()
+            .name("testToClose")
+            .sourceState(testing)
+            .eventType(CloseTicketEH.class)
+            .eventHandler(new StartDevelopmentEH())
+            .targetState(close)
+            .build();
+
+    Transition reopenTransition = new TransitionBuilder()
+            .name("reopen")
+            .sourceState(testing)
+            .sourceState(close)
+            .eventType(ReOpenEvent.class)
+            .eventHandler(new ReOpenEH())
+            .targetState(open)
             .build();
 
     public FiniteStateMachine configure() {
         return new FiniteStateMachineBuilder(states, initial)
                 .registerTransition(openTransition)
                 .registerTransition(inDevTransition)
-
+                .registerTransition(inTestTransition)
+                .registerTransition(testToCloseTransition)
+                .registerTransition(reopenTransition)
                 .registerFinalState(close)
                 .build();
     }
