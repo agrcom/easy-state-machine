@@ -8,8 +8,4 @@ public class Ticket{
     private String id;
     private String topic;
     private TicketState status;
-
-
-
-
 }
